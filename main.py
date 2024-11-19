@@ -40,8 +40,6 @@ models = {
 
 
 
-
-
 @st.cache_data
 def run_cross_validation(X, y, model_name, n_splits=5):
     """
@@ -113,160 +111,182 @@ def main():
     # Prepare data
     X = df.drop(["Label", "Label_n"], axis=1)
     y = df["Label_n"]
-                
-    # Main content area
-    st.markdown("""
-    <style>
-    .metric-container {
-        background-color: #f0f2f6;
-        padding: 20px;
-        border-radius: 10px;
-        margin: 10px 0;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-        
-    # Run cross-validation for the selected model and cache results
-    @st.cache_data
-    def get_model_results(X, y, model_name):
-            return run_cross_validation(X, y, model_name)
-    
-    # Create tabs for different sections
-    tab1, tab2 = st.tabs(["Current Model Performance", "Literature Comparison"])
-    
-    with tab1:
-        st.header('Model Performance Analysis, the models are trying to predict if a given line is normal or an attack, it does not try to predict the type of attack')
-        
-        # Model selection with description
-        st.subheader('Model Selection')
-        selected_model = st.selectbox(
-            'Choose a Machine Learning Model',
-            list(models.keys()),
-            help='Select a model to view its performance metrics'
-        )
-        
-        st.header(f'Performance Metrics for {selected_model}')
-        
-        # Get results for the selected model
-        model_results, X_data = get_model_results(X, y, selected_model)
-        
-        # Display performance metrics in a grid
-        col1, col2, col3, col4 = st.columns(4)
-        metrics_list = [(k,v) for k,v in model_results.items() if k != 'execution_time']
-        
-        metrics_columns = [col1, col2, col3, col4]
-        for (metric, value), col in zip(metrics_list, metrics_columns):
-            with col:
-                st.metric(
-                    label=metric.capitalize(),
-                    value=f"{value['mean']:.4f}",
-                    delta=f"± {value['std']:.4f}",
-                    help=f'Mean and standard deviation for {metric}'
-                )
-        
-        # Display execution time with improved styling
-        st.subheader("⏱️ Execution Time")
-        st.metric(
-            label="Average Processing Time (seconds)",
-            value=f"{model_results['execution_time']['mean']:.4f}",
-            delta=f"± {model_results['execution_time']['std']:.4f}",
-            help='Average time taken to train and evaluate the model'
-        )
 
-        # Add confusion matrix visualization
-        st.subheader("Confusion Matrix")
-        
-        @st.cache_data
-        def get_confusion_matrix(X, y, model_name):
-            model = models[model_name]
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=15)
-            model.fit(X_train, y_train)
-            y_pred = model.predict(X_test)
-            cm = confusion_matrix(y_test, y_pred)
-            return cm
-            
-        cm = get_confusion_matrix(X, y, selected_model)
-        
-        # Create a heatmap using plotly
-        fig = go.Figure(data=go.Heatmap(
-            z=cm,
-            x=['Normal', 'Attack'],
-            y=['Normal', 'Attack'],
-            text=cm,
-            texttemplate="%{text}",
-            textfont={"size": 16},
-            colorscale='Blues',
-            showscale=True
-        ))
-        
-        fig.update_layout(
-            xaxis_title="Predicted Label",
-            yaxis_title="True Label",
-            width=600,
-            height=400
-        )
-        
-        st.plotly_chart(fig)
+    # Create sections in sidebar
+    section = st.sidebar.selectbox(
+        "Choose a Section",
+        ["Exploratory Analysis", "Physical Data Analysis", "Network Data Analysis"],
+        key="section_selector",
+        help="Select a section to view different analyses"
+    )
 
-    with tab2:
-        st.header("📚 Reference Performance Metrics")
+    if section == "Exploratory Analysis":
+        st.header("Exploratory Data Analysis")
+        st.write("This section will contain exploratory analysis of the data")
+        # Add exploratory analysis content here
+
+    elif section == "Physical Data Analysis":
+        # Main content area
         st.markdown("""
-        This section shows performance metrics from published research papers,
-        demonstrating how different algorithms perform on physical and network datasets.
-        """)
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.subheader("Literature Results")
-            # Research metrics with improved formatting
-            research_metrics = {
-                "Algorithm": ["KNN", "Random Forest", "SVM", "Naive Bayes"],
-                "Accuracy": [0.98, 0.99, 0.93, 0.93],
-                "Recall": [0.95, 0.98, 0.92, 0.92], 
-                "Precision": [0.95, 0.95, 0.64, 0.66],
-                "F1 Score": [0.95, 0.97, 0.75, 0.77],
-            }
+        <style>
+        .metric-container {
+            background-color: #f0f2f6;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        </style>
+        """, unsafe_allow_html=True)
             
-            # Convert to DataFrame for better display
-            df_research = pd.DataFrame(research_metrics)
-            
-            # Style the dataframe
-            styled_df = df_research.style\
-                .format({"Accuracy": "{}", "Recall": "{}", 
-                        "Precision": "{}", "F1 Score": "{}"})\
-                .background_gradient(cmap='Blues', subset=['Accuracy', 'Recall', 'Precision', 'F1 Score'])\
-                .set_properties(**{'text-align': 'center'})
-                
-            st.dataframe(styled_df, use_container_width=True)
+        # Run cross-validation for the selected model and cache results
+        @st.cache_data
+        def get_model_results(X, y, model_name):
+                return run_cross_validation(X, y, model_name)
+        
+        # Create tabs for different sections
+        tab1, tab2 = st.tabs(["Current Model Performance", "Literature Comparison"])
 
-        with col2:
-            st.subheader("Our Results")
-            # Get results for all models
-            our_metrics = {
-                "Algorithm": [],
-                "Accuracy": [],
-                "Recall": [],
-                "Precision": [],
-                "F1 Score": []
-            }
+        with tab1:
+            st.header('Model Performance Analysis')
+            st.markdown('The models are trying to predict if a given line is normal or an attack, it does not try to predict the type of attack')
             
-            for model_name in models.keys():
-                results, _ = get_model_results(X, y, model_name)
-                our_metrics["Algorithm"].append(model_name)
-                our_metrics["Accuracy"].append(f"{results['accuracy']['mean']:.2f}")
-                our_metrics["Recall"].append(f"{results['recall']['mean']:.2f}")
-                our_metrics["Precision"].append(f"{results['precision']['mean']:.2f}")
-                our_metrics["F1 Score"].append(f"{results['f1']['mean']:.2f}")
+            # Model selection with description
+            st.subheader('Model Selection')
+            selected_model = st.selectbox(
+                'Choose a Machine Learning Model',
+                list(models.keys()),
+                help='Select a model to view its performance metrics'
+            )
             
-            df_our = pd.DataFrame(our_metrics)
+            st.header(f'Performance Metrics for {selected_model}')
+            st.markdown('The metrics are the average of the 5 folds')
             
-            styled_df_our = df_our.style\
-                .format({"Accuracy": "{}", "Recall": "{}", 
-                        "Precision": "{}", "F1 Score": "{}"})\
-                .background_gradient(cmap='Blues', subset=['Accuracy', 'Recall', 'Precision', 'F1 Score'])\
-                .set_properties(**{'text-align': 'center'})
+            # Get results for the selected model
+            model_results, X_data = get_model_results(X, y, selected_model)
+            
+            # Display performance metrics in a grid
+            col1, col2, col3, col4 = st.columns(4)
+            metrics_list = [(k,v) for k,v in model_results.items() if k != 'execution_time']
+            
+            metrics_columns = [col1, col2, col3, col4]
+            for (metric, value), col in zip(metrics_list, metrics_columns):
+                with col:
+                    st.metric(
+                        label=metric.capitalize(),
+                        value=f"{value['mean']:.4f}",
+                        delta=f"± {value['std']:.4f}",
+                        help=f'Mean and standard deviation for {metric}'
+                    )
+            
+            # Display execution time with improved styling
+            st.subheader("⏱️ Execution Time")
+            st.metric(
+                label="Average Processing Time (seconds)",
+                value=f"{model_results['execution_time']['mean']:.4f}",
+                delta=f"± {model_results['execution_time']['std']:.4f}",
+                help='Average time taken to train and evaluate the model'
+            )
+
+            # Add confusion matrix visualization
+            st.subheader("Confusion Matrix")
+            
+            @st.cache_data
+            def get_confusion_matrix(X, y, model_name):
+                model = models[model_name]
+                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=15)
+                model.fit(X_train, y_train)
+                y_pred = model.predict(X_test)
+                cm = confusion_matrix(y_test, y_pred)
+                return cm
                 
-            st.dataframe(styled_df_our, use_container_width=True)
+            cm = get_confusion_matrix(X, y, selected_model)
+            
+            # Create a heatmap using plotly
+            fig = go.Figure(data=go.Heatmap(
+                z=cm,
+                x=['Normal', 'Attack'],
+                y=['Normal', 'Attack'],
+                text=cm,
+                texttemplate="%{text}",
+                textfont={"size": 16},
+                colorscale='Blues',
+                showscale=True
+            ))
+            
+            fig.update_layout(
+                xaxis_title="Predicted Label",
+                yaxis_title="True Label",
+                width=600,
+                height=400
+            )
+            
+            st.plotly_chart(fig)
+
+        with tab2:
+            st.header("📚 Reference Performance Metrics")
+            st.markdown("""
+            This section shows performance metrics from published research papers,
+            demonstrating how different algorithms perform on physical and network datasets.
+            """)
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.subheader("Literature Results")
+                # Research metrics with improved formatting
+                research_metrics = {
+                    "Algorithm": ["KNN", "Random Forest", "SVM", "Naive Bayes"],
+                    "Accuracy": [0.98, 0.99, 0.93, 0.93],
+                    "Recall": [0.95, 0.98, 0.92, 0.92], 
+                    "Precision": [0.95, 0.95, 0.64, 0.66],
+                    "F1 Score": [0.95, 0.97, 0.75, 0.77],
+                }
+                
+                # Convert to DataFrame for better display
+                df_research = pd.DataFrame(research_metrics)
+                
+                # Style the dataframe
+                styled_df = df_research.style\
+                    .format({"Accuracy": "{}", "Recall": "{}", 
+                            "Precision": "{}", "F1 Score": "{}"})\
+                    .background_gradient(cmap='Blues', subset=['Accuracy', 'Recall', 'Precision', 'F1 Score'])\
+                    .set_properties(**{'text-align': 'center'})
+                    
+                st.dataframe(styled_df, use_container_width=True)
+
+            with col2:
+                st.subheader("Our Results")
+                # Get results for all models
+                our_metrics = {
+                    "Algorithm": [],
+                    "Accuracy": [],
+                    "Recall": [],
+                    "Precision": [],
+                    "F1 Score": []
+                }
+                
+                for model_name in models.keys():
+                    results, _ = get_model_results(X, y, model_name)
+                    our_metrics["Algorithm"].append(model_name)
+                    our_metrics["Accuracy"].append(f"{results['accuracy']['mean']:.2f}")
+                    our_metrics["Recall"].append(f"{results['recall']['mean']:.2f}")
+                    our_metrics["Precision"].append(f"{results['precision']['mean']:.2f}")
+                    our_metrics["F1 Score"].append(f"{results['f1']['mean']:.2f}")
+                
+                df_our = pd.DataFrame(our_metrics)
+                
+                styled_df_our = df_our.style\
+                    .format({"Accuracy": "{}", "Recall": "{}", 
+                            "Precision": "{}", "F1 Score": "{}"})\
+                    .background_gradient(cmap='Blues', subset=['Accuracy', 'Recall', 'Precision', 'F1 Score'])\
+                    .set_properties(**{'text-align': 'center'})
+                    
+                st.dataframe(styled_df_our, use_container_width=True)
+
+    else:  # Network Data Analysis
+        st.header("Network Data Analysis")
+        st.write("This section will contain network data analysis")
+        # Add network data analysis content here
+
 if __name__ == '__main__':
     main()
