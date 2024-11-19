@@ -120,6 +120,9 @@ def main():
         df.drop("Time", inplace=True, axis=1)
         df["Label_n"] = df["Label"].apply(lambda x: 1 if x != "normal" else 0)
 
+        # replace 'nomal' column to 'normal'
+        df["Label"] = df["Label"].apply(lambda x: "normal" if x == "nomal" else x)
+
         df = df.sample(frac=1).reset_index(drop=True)
 
         return df

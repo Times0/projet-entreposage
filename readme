@@ -1,0 +1,44 @@
+# Report Data Protection – Project
+
+## Introduction
+
+The goal of this project is to use data from the physical and network datasets to predict the state of the system, it can either be 'normal' or under attack the types of attacks are:
+
+- MITM (Man-in-the-middle)
+- Physical fault
+- DoS (Denial of Service)
+- scan
+
+The dataset is divided into 2 parts :
+- Physical dataset : it contains 2 hours of 1 measurement per second data of sensors such as pressure, flow rate, and states of valves.
+- Network dataset
+
+We try to predict the state of the system using the physical dataset and the network dataset separately. We can 
+already assume that the scanning attacks won't be correctly predicted using the physical dataset because they 
+only affect the network data.
+
+## Physical dataset
+### Data preprocessing
+We have 4 files for the physical dataset :
+- phy_att_1,2 and 3 are tab separated csv files that contain each 30 minutes of data where attacks occurred.
+- phy_att_4.csv is comma separated csv file that contains 30 minutes of data where attacks occurred.
+- phy_normal.csv is tab separated csv file that contains 1 hour of normal data.
+
+For our analysis we merged the 4 files into a single dataframe, this was not straightforward because some columns were not matching.
+
+The files have slightly different column structures. While the first file only contains a "Label" column, files 2 and 3 include an additional binary indicator column "Label_n" (with some spelling variations like "Lable_n"). This indicator column uses a value of 1 to denote when the corresponding "Label" value represents an attack state, and 0 for normal operation.
+
+proof :
+```py
+df1[(df1["Label_n"] == 1) & (df1["Label"] == "normal")]
+>>> 0 rows × 43 columns
+```
+
+**What do we do ?** We remove the `label_n` and `lable_n` columns to merge the datasets correctly (42 columns) then we add a new column "Label_n" that will be 0 for normal and 1 for attack.
+
+We also noticed an anormal attack name : "nomal". It is not an attack but a normal state, we replace it by "normal" for the whole dataframe.
+
+We shuffle the dataframe to avoid any bias and drop the "Time" column because it is not relevant for our analysis. Indeed predicting the time of the attack is not the goal of this project.
+
+### Data analysis
+
