@@ -1,0 +1,9 @@
+pip
+pandas
+matplotlib
+seaborn
+streamlit
+scikit-learn
+plotly
+xgboost
+catboost
