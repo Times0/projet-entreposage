@@ -85,8 +85,8 @@ def run_cross_validation(X, y, model_name, n_splits=5):
     return result, X
 
 def main():
-    st.title('Machine Learning Model Comparison Dashboard')
-    
+    st.title('A Hardware-in-the-Loop Water Distribution System')
+
     # Load the dataset (replace this with your actual data loading method)
     @st.cache_data
     def load_data():
@@ -113,15 +113,35 @@ def main():
     X = df.drop(["Label", "Label_n"], axis=1)
     y = df["Label_n"]
 
-    # Create sections in sidebar
-    section = st.sidebar.selectbox(
-        "Choose a Section",
-        ["Exploratory Analysis", "Physical Data Analysis", "Network Data Analysis"],
-        key="section_selector",
-        help="Select a section to view different analyses"
+    # Create distinct sections in sidebar with better styling
+    st.sidebar.markdown("## 📊 Navigation")
+    st.sidebar.markdown("---")
+    
+    # Custom CSS for the buttons
+    st.markdown("""
+        <style>
+        div.stButton > button {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+    
+    section = st.sidebar.radio(
+        "Choose a section:",
+        ["🔍 Exploratory Analysis", "🌊 Physical Data Analysis", "🌐 Network Data Analysis"],
+        format_func=lambda x: x,  # Keep emojis in labels
+        help="Select a section to view",
+        key="section_select",
+        label_visibility="collapsed"
     )
+        
+    st.sidebar.markdown("---")
 
-    if section == "Exploratory Analysis":
+    if section == "🔍 Exploratory Analysis":
         st.header("Exploratory Data Analysis")
         st.write("This section will contain exploratory analysis of the data")
         
@@ -136,7 +156,7 @@ def main():
         fig.update_xaxes(ticktext=['Normal (0)', 'Attack (1)'], tickvals=[0, 1])
         st.plotly_chart(fig)
 
-    elif section == "Physical Data Analysis":
+    elif section == "🌊 Physical Data Analysis":
         # Main content area
         st.markdown("""
         <style>
@@ -290,7 +310,7 @@ def main():
                     .format({"Accuracy": "{}", "Recall": "{}", 
                             "Precision": "{}", "F1 Score": "{}"})\
                     .background_gradient(cmap='Blues', subset=['Accuracy', 'Recall', 'Precision', 'F1 Score'])\
-                    .set_properties(**{'text-align': 'center'})\
+                    .set_properties(**{'text-align': 'center'})
                     
                     
                 st.dataframe(styled_df_our, use_container_width=True)
@@ -299,6 +319,5 @@ def main():
         st.header("Network Data Analysis")
         st.write("This section will contain network data analysis")
         # Add network data analysis content here
-
 if __name__ == '__main__':
     main()
