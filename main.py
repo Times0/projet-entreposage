@@ -15,6 +15,7 @@ from sklearn.neighbors import KNeighborsClassifier
 import numpy as np
 import glob
 import plotly.graph_objects as go
+import plotly.express as px
 
 # Scikit-learn models
 from sklearn.neighbors import KNeighborsClassifier
@@ -123,7 +124,17 @@ def main():
     if section == "Exploratory Analysis":
         st.header("Exploratory Data Analysis")
         st.write("This section will contain exploratory analysis of the data")
-        # Add exploratory analysis content here
+        
+        # show histogram of "Label" column using plotly
+        fig = px.histogram(df, x="Label", title="Label Distribution")
+        st.plotly_chart(fig)
+
+        # show histogram of "Label_n" column using plotly with custom labels
+        fig = px.histogram(df, x="Label_n", title="Attack vs Normal Distribution",
+                          labels={'Label_n': 'Type', 'count': 'Count'},
+                          category_orders={'Label_n': [0, 1]})
+        fig.update_xaxes(ticktext=['Normal (0)', 'Attack (1)'], tickvals=[0, 1])
+        st.plotly_chart(fig)
 
     elif section == "Physical Data Analysis":
         # Main content area
@@ -243,7 +254,7 @@ def main():
                 }
                 
                 # Convert to DataFrame for better display
-                df_research = pd.DataFrame(research_metrics)
+                df_research = pd.DataFrame(research_metrics).set_index("Algorithm")
                 
                 # Style the dataframe
                 styled_df = df_research.style\
@@ -273,13 +284,14 @@ def main():
                     our_metrics["Precision"].append(f"{results['precision']['mean']:.2f}")
                     our_metrics["F1 Score"].append(f"{results['f1']['mean']:.2f}")
                 
-                df_our = pd.DataFrame(our_metrics)
+                df_our = pd.DataFrame(our_metrics).set_index("Algorithm")
                 
                 styled_df_our = df_our.style\
                     .format({"Accuracy": "{}", "Recall": "{}", 
                             "Precision": "{}", "F1 Score": "{}"})\
                     .background_gradient(cmap='Blues', subset=['Accuracy', 'Recall', 'Precision', 'F1 Score'])\
-                    .set_properties(**{'text-align': 'center'})
+                    .set_properties(**{'text-align': 'center'})\
+                    
                     
                 st.dataframe(styled_df_our, use_container_width=True)
 
