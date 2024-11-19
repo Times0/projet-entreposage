@@ -16,6 +16,8 @@ import numpy as np
 import glob
 import plotly.graph_objects as go
 import plotly.express as px
+import psutil
+import os
 
 # Scikit-learn models
 from sklearn.neighbors import KNeighborsClassifier
@@ -50,17 +52,26 @@ def run_cross_validation(X, y, model_name, n_splits=5):
     
     metrics = {metric: [] for metric in ['accuracy', 'precision', 'recall', 'f1']}
     execution_times = []
+    memory_usages = []
     
     model = models[model_name]
+    process = psutil.Process(os.getpid())
 
     for train_idx, test_idx in kfold.split(X, y):
         X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
         y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
         
+        # Memory usage before training
+        mem_before = process.memory_info().rss / 1024 / 1024  # Convert to MB
+        
         start_time = time.time()
         model.fit(X_train, y_train)
         y_pred = model.predict(X_test)
         end_time = time.time()
+        
+        # Memory usage after training
+        mem_after = process.memory_info().rss / 1024 / 1024  # Convert to MB
+        memory_usages.append(mem_after - mem_before)
         execution_times.append(end_time - start_time)
         
         # Calculate metrics
@@ -80,6 +91,12 @@ def run_cross_validation(X, y, model_name, n_splits=5):
     result['execution_time'] = {
         'mean': np.mean(execution_times),
         'std': np.std(execution_times)
+    }
+    
+    # Add memory usage metrics
+    result['memory_usage'] = {
+        'mean': np.mean(memory_usages),
+        'std': np.std(memory_usages)
     }
     
     return result, X
@@ -197,7 +214,7 @@ def main():
             
             # Display performance metrics in a grid
             col1, col2, col3, col4 = st.columns(4)
-            metrics_list = [(k,v) for k,v in model_results.items() if k != 'execution_time']
+            metrics_list = [(k,v) for k,v in model_results.items() if k not in ['execution_time', 'memory_usage']]
             
             metrics_columns = [col1, col2, col3, col4]
             for (metric, value), col in zip(metrics_list, metrics_columns):
@@ -209,14 +226,26 @@ def main():
                         help=f'Mean and standard deviation for {metric}'
                     )
             
-            # Display execution time with improved styling
-            st.subheader("⏱️ Execution Time")
-            st.metric(
-                label="Average Processing Time (seconds)",
-                value=f"{model_results['execution_time']['mean']:.4f}",
-                delta=f"± {model_results['execution_time']['std']:.4f}",
-                help='Average time taken to train and evaluate the model'
-            )
+            # Display execution time and memory usage with improved styling
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.subheader("⏱️ Execution Time")
+                st.metric(
+                    label="Average Processing Time (seconds)",
+                    value=f"{model_results['execution_time']['mean']:.4f}",
+                    delta=f"± {model_results['execution_time']['std']:.4f}",
+                    help='Average time taken to train and evaluate the model'
+                )
+            
+            with col2:
+                st.subheader("💾 Memory Usage")
+                st.metric(
+                    label="Average Memory Usage (MB)",
+                    value=f"{model_results['memory_usage']['mean']:.2f}",
+                    delta=f"± {model_results['memory_usage']['std']:.2f}",
+                    help='Additional memory consumed during model training and prediction'
+                )
 
             # Add confusion matrix visualization
             st.subheader("Confusion Matrix")
