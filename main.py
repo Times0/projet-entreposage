@@ -14,6 +14,7 @@ import time
 from sklearn.neighbors import KNeighborsClassifier
 import numpy as np
 import glob
+import plotly.graph_objects as go
 
 # Scikit-learn models
 from sklearn.neighbors import KNeighborsClassifier
@@ -134,7 +135,7 @@ def main():
     tab1, tab2 = st.tabs(["Current Model Performance", "Literature Comparison"])
     
     with tab1:
-        st.header('Model Performance Analysis')
+        st.header('Model Performance Analysis, the models are trying to predict if a given line is normal or an attack, it does not try to predict the type of attack')
         
         # Model selection with description
         st.subheader('Model Selection')
@@ -147,7 +148,7 @@ def main():
         st.header(f'Performance Metrics for {selected_model}')
         
         # Get results for the selected model
-        model_results, _ = get_model_results(X, y, selected_model)
+        model_results, X_data = get_model_results(X, y, selected_model)
         
         # Display performance metrics in a grid
         col1, col2, col3, col4 = st.columns(4)
@@ -171,6 +172,41 @@ def main():
             delta=f"± {model_results['execution_time']['std']:.4f}",
             help='Average time taken to train and evaluate the model'
         )
+
+        # Add confusion matrix visualization
+        st.subheader("Confusion Matrix")
+        
+        @st.cache_data
+        def get_confusion_matrix(X, y, model_name):
+            model = models[model_name]
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=15)
+            model.fit(X_train, y_train)
+            y_pred = model.predict(X_test)
+            cm = confusion_matrix(y_test, y_pred)
+            return cm
+            
+        cm = get_confusion_matrix(X, y, selected_model)
+        
+        # Create a heatmap using plotly
+        fig = go.Figure(data=go.Heatmap(
+            z=cm,
+            x=['Normal', 'Attack'],
+            y=['Normal', 'Attack'],
+            text=cm,
+            texttemplate="%{text}",
+            textfont={"size": 16},
+            colorscale='Blues',
+            showscale=True
+        ))
+        
+        fig.update_layout(
+            xaxis_title="Predicted Label",
+            yaxis_title="True Label",
+            width=600,
+            height=400
+        )
+        
+        st.plotly_chart(fig)
 
     with tab2:
         st.header("📚 Reference Performance Metrics")
@@ -232,6 +268,5 @@ def main():
                 .set_properties(**{'text-align': 'center'})
                 
             st.dataframe(styled_df_our, use_container_width=True)
-            
 if __name__ == '__main__':
     main()
