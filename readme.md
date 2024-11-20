@@ -176,6 +176,7 @@ Thus we decided to remove the `scan` class from the dataset. This makes even mor
 
 ###### Without the scan class
 Here is our new distribution of the classes :
+
 ![alt text](<images/newplot (2).png>)
 
 We run our models again and get these better results :D
