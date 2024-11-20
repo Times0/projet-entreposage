@@ -65,7 +65,7 @@ We drop the Label_n and Label columns from the test dataset
 
 We have a choice to make : predicting the state of the system (normal or attack) or predicting the type of attack (MITM, DoS, Physical fault, Scan). 
 
-![alt text](./images/image-2.png)
+![alt text](<./images/image-2.png>)
 
 Let's start by predicting the state of the system. We will have a smaller imbalance between the classes which will make the training easier.
 
@@ -121,6 +121,8 @@ We have 4 types of attacks in the dataset :
 - DoS
 - Physical fault
 - Scan
+
+###### With the scan class
 
 Let's see how our models perform on this task :
 
