@@ -1,7 +1,6 @@
+
 # Report Data Protection – Project
-
 ## Introduction
-
 The goal of this project is to use data from the physical and network datasets to predict the state of the system, it can either be 'normal' or under attack the types of attacks are:
 
 - MITM (Man-in-the-middle)
