@@ -32,21 +32,19 @@ from catboost import CatBoostClassifier
 
 models = {
     'KNN': KNeighborsClassifier(n_neighbors=10),
-    'CART': DecisionTreeClassifier(random_state=15),
     'Random Forest': RandomForestClassifier(random_state=15, n_estimators=100),
-    'XGBoost': XGBClassifier(random_state=15),
-    'CatBoost': CatBoostClassifier(random_state=15, verbose=False),
+    'CART': DecisionTreeClassifier(random_state=15),
     "SVM": SVC(random_state=15, kernel="rbf"),
-    "Naive Bayes": GaussianNB()
+    "Naive Bayes": GaussianNB(),
+    "MLP": MLPClassifier(random_state=15),
+    # 'XGBoost': XGBClassifier(random_state=15),
+    'CatBoost': CatBoostClassifier(random_state=15, verbose=False),
 }
 
 
 
 @st.cache_data
-def run_cross_validation(X, y, model_name, n_splits=5):
-    """
-    Perform cross-validation and return performance metrics
-    """
+def run_cross_validation(X, y, model_name, n_splits=5)->dict:
     kfold = KFold(n_splits=n_splits, shuffle=True, random_state=15)
     
     metrics = {metric: [] for metric in ['accuracy', 'precision', 'recall', 'f1']}
@@ -76,9 +74,9 @@ def run_cross_validation(X, y, model_name, n_splits=5):
         # Calculate metrics
         report = classification_report(y_test, y_pred, output_dict=True)
         metrics['accuracy'].append(accuracy_score(y_test, y_pred))
-        metrics['precision'].append(report['1']['precision'])
-        metrics['recall'].append(report['1']['recall'])
-        metrics['f1'].append(report['1']['f1-score'])
+        metrics['precision'].append(report['macro avg']['precision'])
+        metrics['recall'].append(report['macro avg']['recall'])
+        metrics['f1'].append(report['macro avg']['f1-score'])
     
     # Calculate mean and standard deviation for each metric
     result = {metric: {
@@ -122,6 +120,13 @@ def main():
         # replace 'nomal' column to 'normal'
         df["Label"] = df["Label"].apply(lambda x: "normal" if x == "nomal" else x)
 
+        # remove the cols with 1 unique value
+        df.drop(columns=df.nunique()[df.nunique() == 1].index, inplace=True)
+
+        # remove the lines with label scan
+        df = df[df["Label"] != "scan"]
+
+        # shuffle the dataframe
         df = df.sample(frac=1).reset_index(drop=True)
 
         return df
@@ -130,7 +135,7 @@ def main():
         
     # Prepare data
     X = df.drop(["Label", "Label_n"], axis=1)
-    y = df["Label_n"]
+    y = df["Label"]
 
     # Create distinct sections in sidebar with better styling
     st.sidebar.markdown("## 📊 Navigation")
@@ -174,6 +179,13 @@ def main():
                           category_orders={'Label_n': [0, 1]})
         fig.update_xaxes(ticktext=['Normal (0)', 'Attack (1)'], tickvals=[0, 1])
         st.plotly_chart(fig)
+
+        # plot every type of attack possible with a histogram
+        df_without_normal = df[df["Label"] != "normal"]
+        fig = px.histogram(df_without_normal, x="Label", title="Type of Attack Distribution")
+        st.plotly_chart(fig)
+
+        
 
     elif section == "🌊 Physical Data Analysis":
         # Main content area
@@ -259,15 +271,17 @@ def main():
                 model.fit(X_train, y_train)
                 y_pred = model.predict(X_test)
                 cm = confusion_matrix(y_test, y_pred)
-                return cm
+                # Get unique labels in correct order
+                labels = np.unique(y)
+                return cm, labels
                 
-            cm = get_confusion_matrix(X, y, selected_model)
+            cm, labels = get_confusion_matrix(X, y, selected_model)
             
             # Create a heatmap using plotly
             fig = go.Figure(data=go.Heatmap(
                 z=cm,
-                x=['Normal', 'Attack'],
-                y=['Normal', 'Attack'],
+                x=labels,
+                y=labels,
                 text=cm,
                 texttemplate="%{text}",
                 textfont={"size": 16},

@@ -36,53 +36,68 @@ df1[(df1["Label_n"] == 1) & (df1["Label"] == "normal")]
 
 **What do we do ?** We remove the `label_n` and `lable_n` columns to merge the datasets correctly (42 columns) then we add a new column "Label_n" that will be 0 for normal and 1 for attack.
 
-We also noticed an anormal attack name : "nomal". It is not an attack but a normal state, we replace it by "normal" for the whole dataframe.
+We also noticed an anormal attack name : "nomal". It is not an attack but a normal state (likely a typo), we replace it by "normal" for the whole dataframe.
 ![alt text](image.png)
 
+We notice that some columns have only one unique value, this will not help our model to predict the state of the system so we drop them.
+
+```py
+>>> print(df.nunique()[df.nunique() == 1])
+Pump_3           1
+Flow_sensor_3    1
+Valv_1           1
+Valv_2           1
+Valv_3           1
+Valv_4           1
+Valv_5           1
+Valv_6           1
+Valv_7           1
+Valv_8           1
+Valv_9           1
+Valv_16          1
+Valv_19          1
+Valv_21          1
+```
 
 We shuffle the dataframe to avoid any bias and drop the "Time" column because it is not relevant for our analysis. Indeed predicting the time of the attack is not the goal of this project.
 
 ### Model training
+> [!IMPORTANT]  
+We drop the Label_n and Label columns from the test dataset
 
 We have a choice to make : predicting the state of the system (normal or attack) or predicting the type of attack (MITM, DoS, Physical fault, Scan). 
 
 ![alt text](image-2.png)
 
-We choose to first predict the state of the system then the type of attack, since the dataset seen like this is more balanced. Also predicting a scan attack or a MITM attack might be impossible only using the physical dataset.
+Let's start by predicting the state of the system. We will have a smaller imbalance between the classes which will make the training easier.
 
-We use the same training and testing conditions for each model according to the research paper : 
-- 5-fold cross validation
-- 80% of the data for training and 20% for testing
+#### Predicting the state of the system
+
+We use the same training and testing conditions for each model according to the research paper : **5-fold cross validation**
 
 We run the same models that they used with the same hyperparameters.
-<!-- ```py
-models = {
-    'KNN': KNeighborsClassifier(n_neighbors=10),
-    'CART': DecisionTreeClassifier(random_state=15),
-    'Random Forest': RandomForestClassifier(random_state=15, n_estimators=100),
-    'XGBoost': XGBClassifier(random_state=15),
-    'CatBoost': CatBoostClassifier(random_state=15, verbose=False),
-    'MLP': MLPClassifier(random_state=15, max_iter=1000),
-    "SVM": SVC(random_state=15, kernel="rbf"),
-    "Naive Bayes": GaussianNB()
-}
-``` -->
 
 - K-Nearest Neighbors (KNN) with k=10
 - Random Forest with 100 trees
 - Support Vector Machine (SVM) with RBF kernel
 - Naive Bayes
 
-Our training results and training time 
+We use the macro average of the metrics to compare the models. Indeed using the weighted average would show good metrics even if the model is not very good at predicting the class with the least samples (attack in this case).
+
+> [!CAUTION]  
+It is not said in the paper what type of average is used (weighted avg or macro avg)and what column is being predicted (Label or Label_n).
+
+Our training results :
 
 | Model | Accuracy | Recall | Precision | F1-Score |
 |-------|----------|-----------|-----------|---------|
-| KNN | 0.96 | 0.90 | 0.96 | 0.93 |
-| Random Forest | 0.98 | 0.96 | 0.98 | 0.97 |
-| SVM | 0.79 | 0.28 | 0.99 | 0.43 |
-| Naive Bayes | 0.67 | 0.45 | 0.45 | 0.45 |
+| KNN           | 0.96 | 0.95 | 0.96 | 0.95 |
+| Random Forest | 0.98 | 0.98 | 0.98 | 0.98 |
+| SVM           | 0.79 | 0.64 | 0.88 | 0.66 |
+| Naive Bayes   | 0.68 | 0.61 | 0.61 | 0.61 |
+||||
 
-For comparison the paper had these results :
+For comparison the paper had these results (we do not know what type of average they used) :
 | Model | Accuracy | Recall | Precision | F1-Score |
 |-------|----------|---------|-----------|----------|
 | KNN | 0.98 | 0.95 | 0.95 | 0.95 |
@@ -90,11 +105,93 @@ For comparison the paper had these results :
 | SVM | 0.93 | 0.92 | 0.64 | 0.75 |
 | Naive Bayes | 0.93 | 0.92 | 0.66 | 0.77 |
 
+We observe pretty similar results, the Random Forest and KNN have the best accuracy and F1-score while the SVM and Naive Bayes have the worst precision and recall. 
 
-We observe pretty similar results, the Random Forest and KNN have the best accuracy and F1-score while the SVM and Naive Bayes have the worst precision and recall.
-
-We also some more modern models like XGBoost and CatBoost :
+We also train some more modern models like XGBoost and CatBoost :
 | Model | Accuracy | Recall | Precision | F1-Score |
 |-------|----------|---------|-----------|----------|
-| XGBoost | 0.98 | 0.97 | 0.98 | 0.97 |
-| CatBoost | 0.98 | 0.96 | 0.97 | 0.97 |
+| MLP           | 0.82 | 0.78 | 0.81 | 0.78 |
+| XGBoost       | 0.98 | 0.98 | 0.98 | 0.98 |
+| CatBoost      | 0.98 | 0.98 | 0.98 | 0.98 |
+
+They provide very good results, catboost is slightly better than XGBoost but is also slower to train (20s vs 1.5s).
+
+#### Predicting the type of attack
+![alt text](<newplot (3).png>)
+We have 4 types of attacks in the dataset :
+- MITM
+- DoS
+- Physical fault
+- Scan
+
+Let's see how our models perform on this task :
+
+macro avg for recall, precision and f1-score :
+| Model | Accuracy | Recall | Precision | F1-Score |
+|-------|----------|---------|-----------|----------|
+| KNN           | 0.96 | 0.76 | 0.74 | 0.75 |
+| Random Forest | 0.99 | 0.77 | 0.79 | 0.78 |
+| SVM           | 0.82 | 0.33 | 0.56 | 0.38 |
+| Naive Bayes   | 0.23 | 0.47 | 0.31 | 0.22 |
+<!-- | CART          | 0.97 | 0.76 | 0.76 | 0.76 | -->
+<!-- | CatBoost      | 0.99 | 0.78 | 0.78 | 0.78 | -->
+
+We notice very disapointing results for the recall precision and f1-score
+
+Let's dig into the results :
+```py
+{'DoS': {'f1-score': 0.9230769230769231,
+         'precision': 0.8571428571428571,
+         'recall': 1.0,
+         'support': 30.0},
+ 'MITM': {'f1-score': 0.9114754098360656,
+          'precision': 0.879746835443038,
+          'recall': 0.9455782312925171,
+          'support': 147.0},
+ 'accuracy': 0.9610726643598616,
+ 'normal': {'f1-score': 0.9738717339667459,
+            'precision': 0.9750297265160524,
+            'recall': 0.9727164887307236,
+            'support': 843.0},
+ 'physical fault': {'f1-score': 0.9494163424124513,
+                    'precision': 1.0,
+                    'recall': 0.9037037037037037,
+                    'support': 135.0},
+ 'scan': {'f1-score': 0.0, 'precision': 0.0, 'recall': 0.0, 'support': 1.0},
+ 'macro avg': {'f1-score': 0.7515680818584372,
+               'precision': 0.7423838838203894,
+               'recall': 0.7643996847453888,
+               'support': 1156.0},
+ 'weighted avg': {'f1-score': 0.9609206495656203,
+                  'precision': 0.9619265830254711,
+                  'recall': 0.9610726643598616,
+                  'support': 1156.0}}
+```
+The macro average is getting very impacted by the lack of any good prediction on the `scan` class. Indeed the f1-score, precision and recall are all 0 for this class.
+
+The macro avg is being calculated by taking the average of the f1-score, precision and recall of each class, **without** taking into account the support of each class.
+
+We could use weighted average but this would give too much importance to the `normal` class which has the most samples.
+
+Thus we decided to remove the `scan` class from the dataset. This makes even more sense because predicting the scan attack is said to be impossible without network data.
+
+
+###### Without the scan class
+Here is our new distribution of the classes :
+![alt text](<newplot (2).png>)
+
+We run our models again and get these better results :D
+
+| Model         | Accuracy | Precision | Recall | F1-Score |
+|---------------|----------|-----------|---------|----------|
+| KNN           | 0.97     | 0.95      | 0.93    | 0.94     |
+| Random Forest | 0.99     | 0.97      | 0.98    | 0.98     |
+| SVM           | 0.82     | 0.42      | 0.70    | 0.47     |
+| Naive Bayes   | 0.29     | 0.52      | 0.37    | 0.30     |
+| CART          | 0.97     | 0.96      | 0.96    | 0.96     |
+| CatBoost      | 0.99     | 0.97      | 0.98    | 0.98     |
+
+CatBoost provides the best results with an accuracy of 99% and a f1-score of 0.98.
+Here is the confusion matrix of the CatBoost model :
+![alt text](<newplot (5).png>)
+
