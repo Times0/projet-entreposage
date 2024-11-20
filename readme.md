@@ -36,7 +36,7 @@ df1[(df1["Label_n"] == 1) & (df1["Label"] == "normal")]
 **What do we do ?** We remove the `label_n` and `lable_n` columns to merge the datasets correctly (42 columns) then we add a new column "Label_n" that will be 0 for normal and 1 for attack.
 
 We also noticed an anormal attack name : "nomal". It is not an attack but a normal state (likely a typo), we replace it by "normal" for the whole dataframe.
-[alt text](images/image.png)
+[alt text](./images/image.png)
 
 We notice that some columns have only one unique value, this will not help our model to predict the state of the system so we drop them.
 
@@ -66,7 +66,7 @@ We drop the Label_n and Label columns from the test dataset
 
 We have a choice to make : predicting the state of the system (normal or attack) or predicting the type of attack (MITM, DoS, Physical fault, Scan). 
 
-[alt text](images/image-2.png)
+[alt text](./images/image-2.png)
 
 Let's start by predicting the state of the system. We will have a smaller imbalance between the classes which will make the training easier.
 
