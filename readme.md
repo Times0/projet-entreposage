@@ -191,4 +191,5 @@ We run our models again and get these better results :D
 
 CatBoost provides the best results with an accuracy of 99% and a f1-score of 0.98.
 Here is the confusion matrix of the CatBoost model :
+
 ![alt text](<images/newplot (5).png>)
