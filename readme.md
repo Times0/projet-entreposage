@@ -22,7 +22,7 @@ We have 4 files for the physical dataset :
 - phy_att_4.csv is comma separated csv file that contains 30 minutes of data where attacks occurred.
 - phy_normal.csv is tab separated csv file that contains 1 hour of normal data.
 
-For our analysis we merged the 4 files into a single dataframe, this was not straightforward because some columns were not matching.
+For our analysis we merged the 5 files into a single dataframe, this was not straightforward because some columns were not matching.
 
 The files have slightly different column structures. While the first file only contains a "Label" column, files 2 and 3 include an additional binary indicator column "Label_n" (with some spelling variations like "Lable_n"). This indicator column uses a value of 1 to denote when the corresponding "Label" value represents an attack state, and 0 for normal operation.
 
@@ -40,21 +40,21 @@ We also noticed an anormal attack name : "nomal". It is not an attack but a norm
 We notice that some columns have only one unique value, this will not help our model to predict the state of the system so we drop them.
 
 ```py
->>> print(df.nunique()[df.nunique() == 1])
-Pump_3           1
-Flow_sensor_3    1
-Valv_1           1
-Valv_2           1
-Valv_3           1
-Valv_4           1
-Valv_5           1
-Valv_6           1
-Valv_7           1
-Valv_8           1
-Valv_9           1
-Valv_16          1
-Valv_19          1
-Valv_21          1
+print(df.nunique()[df.nunique() == 1])
+>>>     Pump_3           1
+        Flow_sensor_3    1
+        Valv_1           1
+        Valv_2           1
+        Valv_3           1
+        Valv_4           1
+        Valv_5           1
+        Valv_6           1
+        Valv_7           1
+        Valv_8           1
+        Valv_9           1
+        Valv_16          1
+        Valv_19          1
+        Valv_21          1
 ```
 
 We shuffle the dataframe to avoid any bias and drop the "Time" column because it is not relevant for our analysis. Indeed predicting the time of the attack is not the goal of this project.
@@ -196,3 +196,32 @@ CatBoost provides the best results with an accuracy of 99% and a f1-score of 0.9
 Here is the confusion matrix of the CatBoost model :
 
 ![alt text](<images/newplot (5).png>)
+
+
+## Network dataset
+### Data preprocessing
+We have 5 files for the network dataset :
+- attack_1.csv, attack_2.csv, attack_3.csv, attack_4.csv. Each contains 30 minutes of network data where attacks occurred.
+- network_normal.csv contains 1 hour of normal network data.
+
+The network data is collected at the same time as the physical datas so we can match each network data with the corresponding physical data.
+
+Once again we merge the 5 files into a single dataframe. But first let's ensure that the columns match.
+
+```py
+df1.columns
+>>> ['Time', ' mac_s', ' mac_d', ' ip_s', ' ip_d', ' sport', ' dport', ' proto', ' flags', ' size', ' modbus_fn', ' n_pkt_src', ' n_pkt_dst', ' modbus_response', ' label_n', ' label']
+
+df4.columns
+>>> ['Time', 'mac_s', 'mac_d', 'ip_s', 'ip_d', 'sport', 'dport', 'proto', 'flags', 'size', 'modbus_fn', 'n_pkt_src', 'n_pkt_dst', 'modbus_response', 'label_n', 'label']
+```
+
+We notice a leading space in the columns of all dfs except the normal one. We remove it from all dfs using the `str.strip()` method :
+
+```py
+df_list = [df1_nul, df2_nul, df3_nul, df4_nul]
+for i, df in enumerate(df_list):
+    df_list[i] = df.rename(mapping={col: col.strip() for col in df.columns})
+df1, df2, df3, df4 = df_list
+```
+
