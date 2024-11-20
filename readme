@@ -37,8 +37,64 @@ df1[(df1["Label_n"] == 1) & (df1["Label"] == "normal")]
 **What do we do ?** We remove the `label_n` and `lable_n` columns to merge the datasets correctly (42 columns) then we add a new column "Label_n" that will be 0 for normal and 1 for attack.
 
 We also noticed an anormal attack name : "nomal". It is not an attack but a normal state, we replace it by "normal" for the whole dataframe.
+![alt text](image.png)
+
 
 We shuffle the dataframe to avoid any bias and drop the "Time" column because it is not relevant for our analysis. Indeed predicting the time of the attack is not the goal of this project.
 
-### Data analysis
+### Model training
 
+We have a choice to make : predicting the state of the system (normal or attack) or predicting the type of attack (MITM, DoS, Physical fault, Scan). 
+
+![alt text](image-2.png)
+
+We choose to first predict the state of the system then the type of attack, since the dataset seen like this is more balanced. Also predicting a scan attack or a MITM attack might be impossible only using the physical dataset.
+
+We use the same training and testing conditions for each model according to the research paper : 
+- 5-fold cross validation
+- 80% of the data for training and 20% for testing
+
+We run the same models that they used with the same hyperparameters.
+<!-- ```py
+models = {
+    'KNN': KNeighborsClassifier(n_neighbors=10),
+    'CART': DecisionTreeClassifier(random_state=15),
+    'Random Forest': RandomForestClassifier(random_state=15, n_estimators=100),
+    'XGBoost': XGBClassifier(random_state=15),
+    'CatBoost': CatBoostClassifier(random_state=15, verbose=False),
+    'MLP': MLPClassifier(random_state=15, max_iter=1000),
+    "SVM": SVC(random_state=15, kernel="rbf"),
+    "Naive Bayes": GaussianNB()
+}
+``` -->
+
+- K-Nearest Neighbors (KNN) with k=10
+- Random Forest with 100 trees
+- Support Vector Machine (SVM) with RBF kernel
+- Naive Bayes
+
+Our training results and training time 
+
+| Model | Accuracy | Recall | Precision | F1-Score |
+|-------|----------|-----------|-----------|---------|
+| KNN | 0.96 | 0.90 | 0.96 | 0.93 |
+| Random Forest | 0.98 | 0.96 | 0.98 | 0.97 |
+| SVM | 0.79 | 0.28 | 0.99 | 0.43 |
+| Naive Bayes | 0.67 | 0.45 | 0.45 | 0.45 |
+
+For comparison the paper had these results :
+| Model | Accuracy | Recall | Precision | F1-Score |
+|-------|----------|---------|-----------|----------|
+| KNN | 0.98 | 0.95 | 0.95 | 0.95 |
+| Random Forest | 0.99 | 0.98 | 0.95 | 0.97 |
+| SVM | 0.93 | 0.92 | 0.64 | 0.75 |
+| Naive Bayes | 0.93 | 0.92 | 0.66 | 0.77 |
+
+
+We observe pretty similar results, the Random Forest and KNN have the best accuracy and F1-score while the SVM and Naive Bayes have the worst precision and recall.
+
+We also some more modern models like XGBoost and CatBoost :
+| Model | Accuracy | Recall | Precision | F1-Score |
+|-------|----------|---------|-----------|----------|
+| XGBoost | 0.98 | 0.97 | 0.98 | 0.97 |
+| CatBoost | 0.98 | 0.96 | 0.97 | 0.97 |

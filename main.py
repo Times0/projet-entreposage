@@ -36,7 +36,6 @@ models = {
     'Random Forest': RandomForestClassifier(random_state=15, n_estimators=100),
     'XGBoost': XGBClassifier(random_state=15),
     'CatBoost': CatBoostClassifier(random_state=15, verbose=False),
-    'MLP': MLPClassifier(random_state=15, max_iter=1000),
     "SVM": SVC(random_state=15, kernel="rbf"),
     "Naive Bayes": GaussianNB()
 }
