@@ -303,3 +303,37 @@ For comparison the paper had these results (we do not know what type of average 
 
 
 
+### Evaluation and Comparison
+
+When comparing our results with those reported in the original paper, several interesting observations emerge:
+
+#### Overall Performance:
+
+Our models generally achieved more consistent performance across metrics
+Most of our models reached approximately 76% accuracy, showing more stability than the paper's results.
+
+The F1-scores in our experiments (0.67-0.68) were notably higher than those in the paper (0.20-0.54)
+
+
+The most notable differences were observed with the SVM and Naive Bayes models. Our SVM implementation achieved 71% accuracy and a 0.41 F1-score, significantly outperforming the paper's 69% accuracy and 0.20 F1-score, demonstrating a much better balance between precision and recall. Similarly, for Naive Bayes, while the paper achieved higher accuracy at 75%, our model excelled in reliability with a far superior F1-score (0.41 vs. 0.21), emphasizing better performance in balancing predictions. These results highlight the importance of evaluating beyond accuracy to capture model effectiveness comprehensively.
+
+
+
+
+Conclusion:
+
+Our research successfully developed machine learning models to detect cyber attacks in industrial control systems. By analyzing both physical sensor data and network traffic, we created a comprehensive security monitoring approach.
+
+Data preprocessing proved to be a crucial step in achieving reliable results. For the physical dataset, we addressed challenges like mismatched column names, inconsistent separators, and duplicate labels. In the network dataset, we tackled the significant class imbalance through undersampling, converted categorical MAC addresses to numeric values, and transformed IP addresses into meaningful features. This thorough preprocessing approach laid the foundation for our models success and highlights how critical data cleaning is for security applications.
+
+The physical dataset analysis produced exceptional results. Our best models - CatBoost and Random Forest - achieved 99% accuracy in detecting attacks. These models excel at identifying MITM attacks, DoS attacks, and physical faults. However, they cannot detect network scanning activities, which was an expected limitation since these attacks don't affect physical measurements.
+
+The network dataset presented greater challenges due to its size and imbalanced nature. After applying preprocessing techniques and balancing the dataset, our models achieved 76% accuracy. This represents a meaningful improvement over previous research, particularly in the reliability of SVM and Naive Bayes models.
+
+When comparing our results to the original paper, our implementation shows more consistent and reliable performance across all metrics. The key to this improvement was our thorough preprocessing approach, including careful handling of categorical variables and strategic feature selection.
+
+We recommend using ensemble methods like CatBoost and Random Forest in real-world applications. Additionally, our research shows that combining separate detection systems for physical and network monitoring provides the most effective security coverage and that is why we used each dataset separately.
+
+
+
+
