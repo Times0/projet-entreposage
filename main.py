@@ -209,19 +209,13 @@ def main():
 
         # Add Network Topology Images
         st.subheader("Network Dataset")
-        
-        
-        
-        st.image("images_network/label_original.png", 
-                caption="Network Topology - Overview")
             
         
-        st.image("images_network/label_distribution.png", 
-                caption="Network Topology - Detailed View")
-            
+        st.image("images_network/label_distribution.png")
+
+        st.image("images_network/balanced_distribution.png")
         
-        st.image("images_network/2classes.png", 
-                caption="Network Topology - Components")
+        st.image("images_network/label_n_distribution.png")
     
         
 

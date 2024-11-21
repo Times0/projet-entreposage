@@ -199,6 +199,9 @@ Here is the confusion matrix of the CatBoost model :
 
 
 ## Network dataset
+
+PS: since the network dataset is too big to be uploaded on streamlit we only provide the code to preprocess the data in the network_pd.ipynb file once we have the network_mini_dataset we can run the code without any preoblem and so it won't take a lot of time to run.
+
 ### Data preprocessing
 We have 5 files for the network dataset :
 - attack_1.csv, attack_2.csv, attack_3.csv, attack_4.csv. Each contains 30 minutes of network data where attacks occurred.
@@ -237,21 +240,21 @@ print(df.nunique()[df.nunique() == 1])
 ```
 
 and here is the distribution of the classes :
-![alt text](<./images_network/label_original.png>)
+![alt text](<./images_network/label_distribution.png>)
 
 
 We notice that the network data has a lot more samples than the physical data and that the classes are more imbalanced so we decide to use undersampling and drop 70% of the normal label rows.
 
 Also we will drop scan because it is not an attack.
 
-![alt text](<./images_network/label_distribution.png>)
+![alt text](<./images_network/balanced_distribution.png>)
 
 
 Let's start by predicting the state of the system (attack or normal). We will have no imbalance between the classes which will make the training easier. And to first test the models on a fraction of the data because the original one have more than 20 million rows.
 
 ### Model training
 
-![alt text](<./images_network/2classes.png>)
+![alt text](<./images_network/label_n_distribution.png>)
 
 
 We dropped Rows with Missing Values to Ensure the dataset is clean for more precise results as we could afford to drop these rows without significant loss.
