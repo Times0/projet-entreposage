@@ -105,7 +105,9 @@ For comparison the paper had these results (we do not know what type of average 
 
 We observe pretty similar results, the Random Forest and KNN have the best accuracy and F1-score while the SVM and Naive Bayes have the worst precision and recall. 
 
-We also train some more modern models like XGBoost and CatBoost :
+We also train some more modern models like XGBoost and CatBoost. 
+CatBoost, is a gradient boosting library that builds an ensemble of decision trees sequentially while combating prediction shift through a novel ordered boosting approach, which helps prevent overfitting and generally requires less hyperparameter tuning compared to XGBoost. (https://catboost.ai/)
+
 | Model | Accuracy | Recall | Precision | F1-Score |
 |-------|----------|---------|-----------|----------|
 | MLP           | 0.82 | 0.78 | 0.81 | 0.78 |
