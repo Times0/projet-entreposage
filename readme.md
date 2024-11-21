@@ -305,11 +305,7 @@ For comparison the paper had these results (we do not know what type of average 
 
 ### Evaluation and Comparison
 
-When comparing our results with those reported in the original paper, several interesting observations emerge:
-
-#### Overall Performance:
-
-Our models generally achieved more consistent performance across metrics
+When comparing our results with those reported in the original paper, our models generally achieved more consistent performance across metrics
 Most of our models reached approximately 76% accuracy, showing more stability than the paper's results.
 
 The F1-scores in our experiments (0.67-0.68) were notably higher than those in the paper (0.20-0.54)
@@ -320,7 +316,8 @@ The most notable differences were observed with the SVM and Naive Bayes models. 
 
 
 
-Conclusion:
+
+## Conclusion:
 
 Our research successfully developed machine learning models to detect cyber attacks in industrial control systems. By analyzing both physical sensor data and network traffic, we created a comprehensive security monitoring approach.
 
