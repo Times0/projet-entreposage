@@ -225,3 +225,54 @@ for i, df in enumerate(df_list):
 df1, df2, df3, df4 = df_list
 ```
 
+And now we continue to merge the 5 CSV datafiles as we did in the physical data 
+
+We shuffle the dataframe to avoid any bias and drop the "Time" column because it is not relevant for our analysis as we did in the physical data.
+
+and also we found out that sport and proto have only one unique value so we drop them.
+```py
+print(df.nunique()[df.nunique() == 1])
+>>> sport    1
+    proto    1
+```
+
+and here is the distribution of the classes :
+![alt text](<./images_network/label_original.png>)
+
+
+We notice that the network data has a lot more samples than the physical data and that the classes are more imbalanced so we decide to use undersampling and drop 70% of the normal label rows.
+
+Also we will drop scan because it is not an attack.
+
+![alt text](<./images_network/label_distribution.png>)
+
+
+Let's start by predicting the state of the system (attack or normal). We will have no imbalance between the classes which will make the training easier. And to first test the models on a fraction of the data because the original one have more than 20 million rows.
+
+### Model training
+
+![alt text](<./images_network/2classes.png>)
+
+
+We dropped Rows with Missing Values to Ensure the dataset is clean for more precise results as we could afford to drop these rows without significant loss.
+
+
+We Used Label Encoding to convert categorical MAC addresses(mac_s, mac_d) into numeric values.
+
+We converted IPs to integers by removing dots (.) and treating the result as a single integer.
+
+We applied to proto (protocol) and modbus_fn (Modbus function) using one-hot encoding.
+
+
+
+
+#### Predicting the state of the system
+
+
+We run the same models that they used with the same hyperparameters as in the physical dataset.
+
+- K-Nearest Neighbors (KNN) with k=10
+- CART
+- Random Forest with 100 trees
+- CatBoost
+- Naive Bayes

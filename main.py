@@ -26,7 +26,7 @@ from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neural_network import MLPClassifier
-from xgboost import XGBClassifier
+#from xgboost import XGBClassifier
 from catboost import CatBoostClassifier
 
 
