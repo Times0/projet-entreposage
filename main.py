@@ -10,6 +10,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import KFold
+from sklearn.preprocessing import LabelEncoder
 import time
 from sklearn.neighbors import KNeighborsClassifier
 import numpy as np
@@ -131,8 +132,25 @@ def main():
 
         return df
     
+    # Move get_model_results function here, outside of any section
+    @st.cache_data
+    def get_model_results(X, y, model_name):
+        return run_cross_validation(X, y, model_name)
+    
+    # Move get_confusion_matrix function here as well
+    @st.cache_data
+    def get_confusion_matrix(X, y, model_name):
+        model = models[model_name]
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=15)
+        model.fit(X_train, y_train)
+        y_pred = model.predict(X_test)
+        cm = confusion_matrix(y_test, y_pred)
+        # Get unique labels in correct order
+        labels = np.unique(y)
+        return cm, labels
+
     df = load_data()
-        
+    
     # Prepare data
     X = df.drop(["Label", "Label_n"], axis=1)
     y = df["Label"]
@@ -168,7 +186,8 @@ def main():
     if section == "🔍 Exploratory Analysis":
         st.header("Exploratory Data Analysis")
         st.write("This section will contain exploratory analysis of the data")
-        
+
+        st.subheader("Physical Dataset")
         # show histogram of "Label" column using plotly
         fig = px.histogram(df, x="Label", title="Label Distribution")
         st.plotly_chart(fig)
@@ -184,6 +203,27 @@ def main():
         df_without_normal = df[df["Label"] != "normal"]
         fig = px.histogram(df_without_normal, x="Label", title="Type of Attack Distribution")
         st.plotly_chart(fig)
+
+        st.markdown("---")  # Add a separator
+        
+
+        # Add Network Topology Images
+        st.subheader("Network Dataset")
+        
+        
+        
+        st.image("images_network/label_original.png", 
+                caption="Network Topology - Overview")
+            
+        
+        st.image("images_network/label_distribution.png", 
+                caption="Network Topology - Detailed View")
+            
+        
+        st.image("images_network/2classes.png", 
+                caption="Network Topology - Components")
+    
+        
 
         
 
@@ -264,17 +304,6 @@ def main():
             # Add confusion matrix visualization
             st.subheader("Confusion Matrix")
             
-            @st.cache_data
-            def get_confusion_matrix(X, y, model_name):
-                model = models[model_name]
-                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=15)
-                model.fit(X_train, y_train)
-                y_pred = model.predict(X_test)
-                cm = confusion_matrix(y_test, y_pred)
-                # Get unique labels in correct order
-                labels = np.unique(y)
-                return cm, labels
-                
             cm, labels = get_confusion_matrix(X, y, selected_model)
             
             # Create a heatmap using plotly
@@ -362,7 +391,157 @@ def main():
 
     else:  # Network Data Analysis
         st.header("Network Data Analysis")
-        st.write("This section will contain network data analysis")
-        # Add network data analysis content here
+        st.markdown('The models are trying to predict the type of network attack')
+        
+        # Load and preprocess network data
+        @st.cache_data
+        def load_network_data():
+            df_network = pd.read_csv('dataset/Network datatset/csv/network_mini_dataset.csv')
+            return df_network
+            
+        df_network = load_network_data()
+        
+        # Split features and target
+        X = df_network.drop(['label', 'label_n'], axis=1)
+        y = df_network['label']
+        
+        # Create tabs for different sections
+        tab1, tab2 = st.tabs(["Current Model Performance", "Literature Comparison"])
+
+        with tab1:
+            st.header('Model Performance Analysis')
+            
+            # Model selection with description
+            st.subheader('Model Selection')
+            selected_model = st.selectbox(
+                'Choose a Machine Learning Model',
+                list(models.keys()),
+                help='Select a model to view its performance metrics',
+                key='network_model_select'
+            )
+            
+            st.header(f'Performance Metrics for {selected_model}')
+            st.markdown('The metrics are the average of the 5 folds')
+            
+            # Get results for the selected model
+            model_results, X_data = get_model_results(X, y, selected_model)
+            
+            # Display performance metrics in a grid
+            col1, col2, col3, col4 = st.columns(4)
+            metrics_list = [(k,v) for k,v in model_results.items() if k not in ['execution_time', 'memory_usage']]
+            
+            metrics_columns = [col1, col2, col3, col4]
+            for (metric, value), col in zip(metrics_list, metrics_columns):
+                with col:
+                    st.metric(
+                        label=metric.capitalize(),
+                        value=f"{value['mean']:.4f}",
+                        delta=f"± {value['std']:.4f}",
+                        help=f'Mean and standard deviation for {metric}'
+                    )
+            
+            # Display execution time and memory usage
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.subheader("⏱️ Execution Time")
+                st.metric(
+                    label="Average Processing Time (seconds)",
+                    value=f"{model_results['execution_time']['mean']:.4f}",
+                    delta=f"± {model_results['execution_time']['std']:.4f}",
+                    help='Average time taken to train and evaluate the model'
+                )
+            
+            with col2:
+                st.subheader("💾 Memory Usage")
+                st.metric(
+                    label="Average Memory Usage (MB)",
+                    value=f"{model_results['memory_usage']['mean']:.2f}",
+                    delta=f"± {model_results['memory_usage']['std']:.2f}",
+                    help='Additional memory consumed during model training and prediction'
+                )
+
+            # Add confusion matrix visualization
+            st.subheader("Confusion Matrix")
+            
+            cm, labels = get_confusion_matrix(X, y, selected_model)
+            
+            # Create a heatmap using plotly
+            fig = go.Figure(data=go.Heatmap(
+                z=cm,
+                x=labels,
+                y=labels,
+                text=cm,
+                texttemplate="%{text}",
+                textfont={"size": 16},
+                colorscale='Blues',
+                showscale=True
+            ))
+            
+            fig.update_layout(
+                xaxis_title="Predicted Label",
+                yaxis_title="True Label",
+                width=800,  # Increased width to accommodate more labels
+                height=600  # Increased height to accommodate more labels
+            )
+            
+            st.plotly_chart(fig)
+
+        with tab2:
+            st.header("📚 Reference Performance Metrics")
+            st.markdown("""
+            This section shows performance metrics from published research papers,
+            demonstrating how different algorithms perform on network datasets.
+            """)
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.subheader("Literature Results")
+                research_metrics = {
+                    "Algorithm": ["KNN", "Random Forest", "SVM", "Naive Bayes"],
+                    "Accuracy": [0.77, 0.75, 0.69, 0.75],
+                    "Recall": [0.44, 0.53, 0.99, 0.15],
+                    "Precision": [0.68, 0.56, 0.10, 0.90],
+                    "F1 Score": [0.53, 0.54, 0.20, 0.21]
+                }
+                
+                df_research = pd.DataFrame(research_metrics).set_index("Algorithm")
+                
+                styled_df = df_research.style\
+                    .format({"Accuracy": "{}", "Recall": "{}", 
+                            "Precision": "{}", "F1 Score": "{}"})\
+                    .background_gradient(cmap='Blues', subset=['Accuracy', 'Recall', 'Precision', 'F1 Score'])\
+                    .set_properties(**{'text-align': 'center'})
+                    
+                st.dataframe(styled_df, use_container_width=True)
+
+            with col2:
+                st.subheader("Our Results")
+                our_metrics = {
+                    "Algorithm": [],
+                    "Accuracy": [],
+                    "Recall": [],
+                    "Precision": [],
+                    "F1 Score": []
+                }
+                
+                for model_name in models.keys():
+                    results, _ = get_model_results(X, y, model_name)
+                    our_metrics["Algorithm"].append(model_name)
+                    our_metrics["Accuracy"].append(f"{results['accuracy']['mean']:.2f}")
+                    our_metrics["Recall"].append(f"{results['recall']['mean']:.2f}")
+                    our_metrics["Precision"].append(f"{results['precision']['mean']:.2f}")
+                    our_metrics["F1 Score"].append(f"{results['f1']['mean']:.2f}")
+                
+                df_our = pd.DataFrame(our_metrics).set_index("Algorithm")
+                
+                styled_df_our = df_our.style\
+                    .format({"Accuracy": "{}", "Recall": "{}", 
+                            "Precision": "{}", "F1 Score": "{}"})\
+                    .background_gradient(cmap='Blues', subset=['Accuracy', 'Recall', 'Precision', 'F1 Score'])\
+                    .set_properties(**{'text-align': 'center'})
+                    
+                st.dataframe(styled_df_our, use_container_width=True)
 if __name__ == '__main__':
     main()
