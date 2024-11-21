@@ -1,5 +1,11 @@
 
-# Report Data Protection – Project
+# Report Data Protection – Project (https://github.com/Times0/projet-entreposage/blob/master/readme.md)
+
+## How to run the webapp
+- install requirements
+- Run the network.ipynb until it creates the network_mini_dataset.csv
+- start the streamlit app with `streamlit run main.py`
+
 ## Introduction
 The goal of this project is to use data from the physical and network datasets to predict the state of the system, it can either be 'normal' or under attack the types of attacks are:
 
