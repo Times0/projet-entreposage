@@ -276,3 +276,23 @@ We run the same models that they used with the same hyperparameters as in the ph
 - Random Forest with 100 trees
 - CatBoost
 - Naive Bayes
+
+Our training results :
+
+| Model | Accuracy | Recall | Precision | F1-Score |
+|-------|----------|-----------|-----------|---------|
+| KNN           | 0.74 | 0.67 | 0.68 | 0.68 |
+| CART          | 0.76 | 0.66 | 0.71 | 0.68 |
+| Random Forest | 0.76 | 0.66 | 0.71 | 0.68 |
+| CatBoost      | 0.76 | 0.65 | 0.73 | 0.67 |
+| Naive Bayes   | 0.71 | 0.50 | 0.35 | 0.41 |
+| SVM           | 0.71 | 0.35 | 0.50 | 0.41 |
+
+
+For comparison the paper had these results (we do not know what type of average they used) :
+| Model | Accuracy | Recall | Precision | F1-Score |
+|-------|----------|---------|-----------|----------|
+| KNN | 0.77 | 0.44 | 0.68 | 0.53 |
+| Random Forest | 0.75 | 0.53 | 0.56 | 0.54 |
+| SVM | 0.69 | 0.99 | 0.10 | 0.20 |
+| Naive Bayes | 0.75 | 0.15 | 0.90 | 0.21 |
