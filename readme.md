@@ -123,7 +123,7 @@ CatBoost, is a gradient boosting library that builds an ensemble of decision tre
 They provide very good results, catboost is slightly better than XGBoost but is also slower to train (20s vs 1.5s).
 
 #### Predicting the type of attack
-![alt text](images/<newplot (3).png>)
+![alt text](<images/newplot (3).png>)
 We have 4 types of attacks in the dataset :
 - MITM
 - DoS
