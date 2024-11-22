@@ -231,10 +231,11 @@ def main():
         # Show initial data structure
         st.subheader("1. Initial Dataset Structure")
         st.markdown("""
-        We start with 3 files containing attack data:
+        We start with 3 files containing attack data and 1 file containing normal data:
         - phy_att_1.csv
         - phy_att_2.csv
         - phy_att_3.csv
+        - phy_normal.csv
         """)
         
         col1, col2 = st.columns(2)
